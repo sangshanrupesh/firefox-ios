@@ -33,39 +33,40 @@ open class DefaultSuggestedSites {
         ]
     ]
 
+    // TODO temp disable for testing
     public static let sites = [
         "default": [
-            SuggestedSiteData(
-                url: "https://m.facebook.com/",
-                faviconUrl: "https://static.xx.fbcdn.net/rsrc.php/v3/yi/r/4Kv5U5b1o3f.png",
-                trackingId: 632,
-                title: .DefaultSuggestedFacebook
-            ),
-            SuggestedSiteData(
-                url: "https://m.youtube.com/",
-                faviconUrl: "https://m.youtube.com/static/apple-touch-icon-180x180-precomposed.png",
-                trackingId: 631,
-                title: .DefaultSuggestedYouTube
-            ),
-            SuggestedSiteData(
-                url: "https://www.amazon.com/",
-                // FIXME Need the correct favicon URL... grabbed this one from the contile services link
-                faviconUrl: "https://tiles-cdn.prod.ads.prod.webservices.mozgcp.net/CAP5k4gWqcBGwir7bEEmBWveLMtvldFu-y_kyO3txFA=.9991.jpg",
-                trackingId: 630,
-                title: .DefaultSuggestedAmazon
-            ),
-            SuggestedSiteData(
-                url: "https://www.wikipedia.org/",
-                faviconUrl: "https://www.wikipedia.org/static/apple-touch/wikipedia.png",
-                trackingId: 629,
-                title: .DefaultSuggestedWikipedia
-            ),
-            SuggestedSiteData(
-                url: "https://x.com/", // TODO Update Twitter to X
-                faviconUrl: "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
-                trackingId: 628,
-                title: .DefaultSuggestedTwitter
-            )
+//            SuggestedSiteData(
+//                url: "https://m.facebook.com/",
+//                faviconUrl: "https://static.xx.fbcdn.net/rsrc.php/v3/yi/r/4Kv5U5b1o3f.png",
+//                trackingId: 632,
+//                title: .DefaultSuggestedFacebook
+//            ),
+//            SuggestedSiteData(
+//                url: "https://m.youtube.com/",
+//                faviconUrl: "https://m.youtube.com/static/apple-touch-icon-180x180-precomposed.png",
+//                trackingId: 631,
+//                title: .DefaultSuggestedYouTube
+//            ),
+//            SuggestedSiteData(
+//                url: "https://www.amazon.com/",
+//                // FIXME Need the correct favicon URL... grabbed this one from the contile services link
+//                faviconUrl: "https://tiles-cdn.prod.ads.prod.webservices.mozgcp.net/CAP5k4gWqcBGwir7bEEmBWveLMtvldFu-y_kyO3txFA=.9991.jpg",
+//                trackingId: 630,
+//                title: .DefaultSuggestedAmazon
+//            ),
+//            SuggestedSiteData(
+//                url: "https://www.wikipedia.org/",
+//                faviconUrl: "https://www.wikipedia.org/static/apple-touch/wikipedia.png",
+//                trackingId: 629,
+//                title: .DefaultSuggestedWikipedia
+//            ),
+//            SuggestedSiteData(
+//                url: "https://x.com/", // TODO Update Twitter to X
+//                faviconUrl: "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
+//                trackingId: 628,
+//                title: .DefaultSuggestedTwitter
+//            )
         ],
         "zh_CN": [ // FIXME Do we still want this as a special case localization? Android doesn't compile this vers. anymore
             SuggestedSiteData(

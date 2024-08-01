@@ -89,17 +89,18 @@ class TopSitesDataAdaptorImplementation: TopSitesDataAdaptor, FeatureFlaggable {
         let availableSpaceCount = getAvailableSpaceCount(maxTopSites: maxTopSites)
         let shouldAddGoogle = shouldAddGoogle(availableSpaceCount: availableSpaceCount)
 
+        // TODO temp disable for testing
         // Add Sponsored tile
-        if shouldAddSponsoredTiles {
-            addSponsoredTiles(sites: &sites,
-                              shouldAddGoogle: shouldAddGoogle,
-                              availableSpaceCount: availableSpaceCount)
-        }
-
-        // Add Google Tile
-        if shouldAddGoogle {
-            addGoogleTopSite(sites: &sites)
-        }
+//        if shouldAddSponsoredTiles {
+//            addSponsoredTiles(sites: &sites,
+//                              shouldAddGoogle: shouldAddGoogle,
+//                              availableSpaceCount: availableSpaceCount)
+//        }
+//
+//        // Add Google Tile
+//        if shouldAddGoogle {
+//            addGoogleTopSite(sites: &sites)
+//        }
 
         sites.removeDuplicates()
 

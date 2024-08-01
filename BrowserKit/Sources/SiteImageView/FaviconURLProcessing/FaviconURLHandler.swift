@@ -36,7 +36,7 @@ struct DefaultFaviconURLHandler: FaviconURLHandler {
             return imageModel
         } catch {
             do {
-                let url = try await urlFetcher.fetchFaviconURL(siteURL: siteURL)
+                let url = try await urlFetcher.fetchFaviconURL(siteURL: siteURL) // gets https://accounts.google.com/favicon.ico but race condition. saving to same cache key as tab metadata?
                 await urlCache.cacheURL(cacheKey: imageModel.cacheKey, faviconURL: url)
                 imageModel.faviconURL = url
                 return imageModel

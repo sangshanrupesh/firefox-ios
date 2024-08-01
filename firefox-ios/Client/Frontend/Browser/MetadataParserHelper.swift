@@ -36,7 +36,7 @@ class MetadataParserHelper: TabEventHandler {
                 return
             }
 
-            tab.pageMetadata = pageMetadata
+            tab.pageMetadata = pageMetadata // FIXME bad favicon URL "https://accounts.google.com/v3/signin/favicon.ico" ...?
             TabEvent.post(.didLoadPageMetadata(pageMetadata), for: tab)
         }
     }

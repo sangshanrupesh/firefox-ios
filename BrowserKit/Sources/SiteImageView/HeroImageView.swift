@@ -84,7 +84,7 @@ public class HeroImageView: UIView, SiteImageView {
         let model = SiteImageModel(id: id,
                                    expectedImageType: .heroImage,
                                    siteURLString: siteURLString)
-        updateImage(site: model)
+//        updateImage(site: model) // TODO Temp disable hero images
     }
 
     func setImage(imageModel: SiteImageModel) {
