@@ -64,7 +64,7 @@ open class DefaultSuggestedSites {
                 url: "https://x.com/", // TODO Update Twitter to X
                 faviconUrl: "https://abs.twimg.com/responsive-web/client-web/icon-ios.77d25eba.png",
                 trackingId: 628,
-                title: .DefaultSuggestedTwitter
+                title: .DefaultSuggestedX
             )
         ],
         "zh_CN": [ // FIXME Do we still want this as a special case localization? Android doesn't compile this vers. anymore
