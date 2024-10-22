@@ -46,7 +46,7 @@ class URLValidationTests: BaseTestCase {
             navigator.openURL(url)
             waitUntilPageLoad()
             mozWaitForElementToExist(app.otherElements.staticTexts["Example Domain"])
-            mozWaitForValueContains(urlField, value: "example.com/")
+            mozWaitForValueContains(urlField, value: "example.com")
             clearURL()
         }
     }

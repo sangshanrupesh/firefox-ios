@@ -10,7 +10,7 @@ class ClipBoardTests: BaseTestCase {
     // Check for test url in the browser
     func checkUrl() {
         let urlTextField = app.textFields[AccessibilityIdentifiers.Browser.UrlBar.url]
-        mozWaitForValueContains(urlTextField, value: "www.example")
+        mozWaitForValueContains(urlTextField, value: "example.com")
     }
 
     // Copy url from the browser
@@ -18,7 +18,6 @@ class ClipBoardTests: BaseTestCase {
         navigator.goto(URLBarOpen)
         urlBarAddress.waitAndTap()
         if iPad() {
-            urlBarAddress.press(forDuration: 1)
             app.menuItems["Select All"].tap()
         }
         app.menuItems["Copy"].waitAndTap()
@@ -61,8 +60,8 @@ class ClipBoardTests: BaseTestCase {
         navigator.nowAt(NewTabScreen)
         navigator.goto(URLBarOpen)
         urlBarAddress.press(forDuration: 3)
-        app.menuItems["Paste"].tap()
-        mozWaitForValueContains(urlBarAddress, value: "www.example.com")
+        app.otherElements["Paste"].tap()
+        mozWaitForValueContains(urlBarAddress, value: "http://www.example.com/")
     }
 
     // https://mozilla.testrail.io/index.php?/cases/view/2307051
@@ -81,7 +80,7 @@ class ClipBoardTests: BaseTestCase {
         app.otherElements[AccessibilityIdentifiers.Photon.pasteAndGoAction].tap()
         // The URL is pasted and the page is correctly loaded
         mozWaitForElementToExist(urlBar)
-        waitForValueContains(urlBar, value: "test-example.html")
+        waitForValueContains(urlBar, value: "localhost")
         mozWaitForElementToExist(app.staticTexts["Example Domain"])
     }
 
