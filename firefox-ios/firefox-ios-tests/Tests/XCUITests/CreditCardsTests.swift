@@ -155,10 +155,10 @@ class CreditCardsTests: BaseTestCase {
         mozWaitForElementToExist(app.staticTexts[creditCardsStaticTexts.AutoFillCreditCard.autoFillCreditCards])
         let saveAndFillPaymentMethodsSwitch =
             app.switches[creditCardsStaticTexts.AutoFillCreditCard.saveAutofillCards].switches.firstMatch
-        if saveAndFillPaymentMethodsSwitch.value! as! String == "1" {
+        if saveAndFillPaymentMethodsSwitch.value! as? String == "1" {
             saveAndFillPaymentMethodsSwitch.tap()
         }
-        XCTAssertEqual(saveAndFillPaymentMethodsSwitch.value! as! String, "0")
+        XCTAssertEqual(saveAndFillPaymentMethodsSwitch.value! as? String, "0")
         app.buttons[creditCardsStaticTexts.AutoFillCreditCard.addCard].tap()
         let dateFiveYearsFromNow = Calendar.current.date(byAdding: .year, value: 5, to: Date())
         let formatter = DateFormatter()
@@ -181,7 +181,7 @@ class CreditCardsTests: BaseTestCase {
             mozWaitForElementToExist(app.staticTexts[creditCardsStaticTexts.AutoFillCreditCard.autoFillCreditCards])
             // Enable the "Save and Fill Payment Methods" toggle
             app.switches.element(boundBy: 1).tap()
-            XCTAssertEqual(saveAndFillPaymentMethodsSwitch.value! as! String, "1")
+            XCTAssertEqual(saveAndFillPaymentMethodsSwitch.value! as? String, "1")
             app.buttons["Settings"].tap()
             navigator.nowAt(SettingsScreen)
             waitForExistence(app.buttons["Done"])
@@ -207,11 +207,11 @@ class CreditCardsTests: BaseTestCase {
         // The credit card's number and name are imported correctly on the designated fields
         let contentView = app.webViews["Web content"].textFields
         mozWaitForElementToExist(contentView["Card number"])
-        XCTAssertEqual(contentView["Card number"].value! as! String, "2720 9943 2658 1252")
-        XCTAssertEqual(contentView["Expiration"].value! as! String, "05 / 40")
-        XCTAssertEqual(contentView["Full name on card"].value! as! String, "Test")
-        XCTAssertEqual(contentView["CVC"].value! as! String, "CVC")
-        XCTAssertEqual(contentView["ZIP"].value! as! String, "ZIP")
+        XCTAssertEqual(contentView["Card number"].value! as? String, "2720 9943 2658 1252")
+        XCTAssertEqual(contentView["Expiration"].value! as? String, "05 / 40")
+        XCTAssertEqual(contentView["Full name on card"].value! as? String, "Test")
+        XCTAssertEqual(contentView["CVC"].value! as? String, "CVC")
+        XCTAssertEqual(contentView["ZIP"].value! as? String, "ZIP")
     }
 
     // https://mozilla.testrail.io/index.php?/cases/view/2306976
@@ -284,7 +284,8 @@ class CreditCardsTests: BaseTestCase {
             app.scrollViews.otherElements.tables.cells.firstMatch.tap()
             validateAutofillCardInfo(cardNr: "2720 9943 2658 1252", expirationNr: "05 / 40", name: "Test")
             dismissSavedCardsPrompt()
-            app.swipeUp()
+            swipeUp(nrOfSwipes: 2)
+            swipeDown(nrOfSwipes: 1)
             app.webViews["Web content"].textFields["Full name on card"].tapOnApp()
             if !app.buttons[useSavedCard].exists {
                 app.webViews["Web content"].textFields["Card number"].tapOnApp()
@@ -294,8 +295,7 @@ class CreditCardsTests: BaseTestCase {
             mozWaitForElementToExist(app.staticTexts["Use saved card"])
             app.scrollViews.otherElements.tables.cells["creditCardCell_1"].tap()
             validateAutofillCardInfo(cardNr: "4111 1111 1111 1111", expirationNr: "06 / 40", name: "Test2")
-            dismissSavedCardsPrompt()
-            app.swipeUp()
+            app.webViews["Web content"].textFields["Email"].tapOnApp()
             app.webViews["Web content"].textFields["Card number"].tapOnApp()
             if !app.buttons[useSavedCard].exists {
                 app.webViews["Web content"].textFields["Full name on card"].tapOnApp()
@@ -493,7 +493,8 @@ class CreditCardsTests: BaseTestCase {
         navigator.goto(NewTabScreen)
         navigator.openURL("https://checkout.stripe.dev/preview")
         waitUntilPageLoad()
-        app.swipeUp()
+        swipeUp(nrOfSwipes: 2)
+        swipeDown(nrOfSwipes: 1)
         let cardNumber = app.webViews["Web content"].textFields["Card number"]
         mozWaitForElementToExist(cardNumber)
         cardNumber.tapOnApp()
@@ -565,17 +566,19 @@ class CreditCardsTests: BaseTestCase {
         let cvc = app.webViews["Web content"].textFields["CVC"]
         let zip = app.webViews["Web content"].textFields["ZIP"]
         mozWaitForElementToExist(email)
+        if !email.isHittable {
+            swipeUp(nrOfSwipes: 2)
+            swipeDown(nrOfSwipes: 1)
+        }
         email.tapOnApp()
         var nrOfRetries = 3
         if iPad() {
             while email.value(forKey: "hasKeyboardFocus") as? Bool == false && nrOfRetries > 0 {
-                swipeDown(nrOfSwipes: 1)
-                email.tapOnApp()
-                nrOfRetries -= 1
             }
         }
         email.typeText("foo@mozilla.org")
         mozWaitForElementToExist(cardNumber)
+        dismissSavedCardsPrompt()
         if skipFillInfo == false {
             cardNumber.tapOnApp()
             cardNumber.typeText(cardNr)
@@ -584,8 +587,10 @@ class CreditCardsTests: BaseTestCase {
             expiration.tapOnApp()
             expiration.typeText(expirationDate)
         }
-        swipeDown(nrOfSwipes: 1)
-        swipeUp(nrOfSwipes: 1)
+
+        if app.keyboards.firstMatch.exists {
+            app.buttons["KeyboardAccessory.doneButton"].tap()
+        }
         cvc.tapOnApp()
         cvc.typeText("123")
         zip.tapOnApp()
@@ -666,11 +671,11 @@ class CreditCardsTests: BaseTestCase {
 
     private func validateAutofillCardInfo(cardNr: String, expirationNr: String, name: String) {
         let contentView = app.webViews["Web content"].textFields
-        XCTAssertEqual(contentView["Card number"].value! as! String, cardNr)
-        XCTAssertEqual(contentView["Expiration"].value! as! String, expirationNr)
-        XCTAssertEqual(contentView["Full name on card"].value! as! String, name)
-        XCTAssertEqual(contentView["CVC"].value! as! String, "CVC")
-        XCTAssertEqual(contentView["ZIP"].value! as! String, "ZIP")
+        XCTAssertEqual(contentView["Card number"].value! as? String, cardNr)
+        XCTAssertEqual(contentView["Expiration"].value! as? String, expirationNr)
+        XCTAssertEqual(contentView["Full name on card"].value! as? String, name)
+        XCTAssertEqual(contentView["CVC"].value! as? String, "CVC")
+        XCTAssertEqual(contentView["ZIP"].value! as? String, "ZIP")
     }
 
     private func reachAutofillWebsite() {
@@ -681,6 +686,8 @@ class CreditCardsTests: BaseTestCase {
         app.swipeUp()
         let cardNumber = app.webViews["Web content"].textFields["Card number"]
         mozWaitForElementToExist(cardNumber)
+        swipeUp(nrOfSwipes: 2)
+        swipeDown(nrOfSwipes: 1)
         cardNumber.tapOnApp()
         if !app.buttons[useSavedCard].exists {
             cardNumber.tapOnApp()
@@ -698,7 +705,7 @@ class CreditCardsTests: BaseTestCase {
         unlockLoginsView()
         mozWaitForElementToExist(app.staticTexts[creditCardsStaticTexts.AutoFillCreditCard.autoFillCreditCards])
         let saveAndFillPaymentMethodsSwitch = app.switches[creditCardsStaticTexts.AutoFillCreditCard.saveAutofillCards]
-        if saveAndFillPaymentMethodsSwitch.value! as! String == "0" {
+        if saveAndFillPaymentMethodsSwitch.value! as? String == "0" {
             saveAndFillPaymentMethodsSwitch.tap()
         }
         app.buttons[creditCardsStaticTexts.AutoFillCreditCard.addCard].tap()
@@ -706,7 +713,8 @@ class CreditCardsTests: BaseTestCase {
         navigator.goto(NewTabScreen)
         navigator.openURL("https://checkout.stripe.dev/preview")
         waitUntilPageLoad()
-        app.swipeUp()
+        swipeUp(nrOfSwipes: 2)
+        swipeDown(nrOfSwipes: 1)
         let cardNumber = app.webViews["Web content"].textFields["Card number"]
         mozWaitForElementToExist(cardNumber)
         cardNumber.tapOnApp()

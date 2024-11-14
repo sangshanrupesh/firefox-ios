@@ -45,7 +45,8 @@ struct ToolbarState: ScreenState, Equatable {
                   showMenuWarningBadge: toolbarState.showMenuWarningBadge,
                   isNewTabFeatureEnabled: toolbarState.isNewTabFeatureEnabled,
                   canShowDataClearanceAction: toolbarState.canShowDataClearanceAction,
-                  canShowNavigationHint: toolbarState.canShowNavigationHint)
+                  canShowNavigationHint: toolbarState.canShowNavigationHint
+        )
     }
 
     init(windowUUID: WindowUUID) {
@@ -101,7 +102,10 @@ struct ToolbarState: ScreenState, Equatable {
 
     static let reducer: Reducer<Self> = { state, action in
         // Only process actions for the current window
-        guard action.windowUUID == .unavailable || action.windowUUID == state.windowUUID else { return state }
+        guard action.windowUUID == .unavailable || action.windowUUID == state.windowUUID
+        else {
+            return defaultState(from: state)
+        }
 
         switch action.actionType {
         case ToolbarActionType.didLoadToolbars:
@@ -140,15 +144,19 @@ struct ToolbarState: ScreenState, Equatable {
         case ToolbarActionType.navigationHintFinishedPresenting:
             return handleNavigationHintFinishedPresenting(state: state, action: action)
 
+        case SearchEngineSelectionActionType.didTapSearchEngine,
+            SearchEngineSelectionMiddlewareActionType.didClearAlternativeSearchEngine:
+            return handleSearchEngineSelectionAction(state: state, action: action)
+
         default:
-            return state
+            return defaultState(from: state)
         }
     }
 
     private static func handleDidLoadToolbars(state: Self, action: Action) -> ToolbarState {
         guard let toolbarAction = action as? ToolbarAction,
               let toolbarPosition = toolbarAction.toolbarPosition
-        else { return state }
+        else { return defaultState(from: state) }
 
         let position = addressToolbarPositionFromSearchBarPosition(toolbarPosition)
         return ToolbarState(
@@ -165,11 +173,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: toolbarAction.isNewTabFeatureEnabled ?? state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: toolbarAction.canShowDataClearanceAction ?? state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleToolbarUpdates(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -184,11 +193,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleShowMenuWarningBadge(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -203,11 +213,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: toolbarAction.showMenuWarningBadge ?? state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleNumberOfTabsChanged(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -222,11 +233,16 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleToolbarPositionChanged(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarPosition = (action as? ToolbarAction)?.toolbarPosition else { return state }
+        guard let toolbarPosition = (action as? ToolbarAction)?.toolbarPosition
+        else {
+            return defaultState(from: state)
+        }
+
         let position = addressToolbarPositionFromSearchBarPosition(toolbarPosition)
         return ToolbarState(
             windowUUID: state.windowUUID,
@@ -242,11 +258,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleReaderModeStateChanged(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -261,11 +278,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleBackForwardButtonStateChanged(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -280,11 +298,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleTraitCollectionDidChange(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -299,11 +318,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: state.canShowNavigationHint)
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func handleNavigationButtonDoubleTapped(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -318,11 +338,12 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: true)
+            canShowNavigationHint: true
+        )
     }
 
     private static func handleNavigationHintFinishedPresenting(state: Self, action: Action) -> ToolbarState {
-        guard let toolbarAction = action as? ToolbarAction else { return state }
+        guard let toolbarAction = action as? ToolbarAction else { return defaultState(from: state) }
         return ToolbarState(
             windowUUID: state.windowUUID,
             toolbarPosition: state.toolbarPosition,
@@ -337,7 +358,31 @@ struct ToolbarState: ScreenState, Equatable {
             showMenuWarningBadge: state.showMenuWarningBadge,
             isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
             canShowDataClearanceAction: state.canShowDataClearanceAction,
-            canShowNavigationHint: false)
+            canShowNavigationHint: false
+        )
+    }
+
+    private static func handleSearchEngineSelectionAction(state: Self, action: Action) -> ToolbarState {
+        guard let searchEngineSelectionAction = action as? SearchEngineSelectionAction else {
+            return defaultState(from: state)
+        }
+
+        return ToolbarState(
+            windowUUID: state.windowUUID,
+            toolbarPosition: state.toolbarPosition,
+            isPrivateMode: state.isPrivateMode,
+            addressToolbar: AddressBarState.reducer(state.addressToolbar, searchEngineSelectionAction),
+            navigationToolbar: NavigationBarState.reducer(state.navigationToolbar, searchEngineSelectionAction),
+            isShowingNavigationToolbar: state.isShowingNavigationToolbar,
+            isShowingTopTabs: state.isShowingTopTabs,
+            canGoBack: state.canGoBack,
+            canGoForward: state.canGoForward,
+            numberOfTabs: state.numberOfTabs,
+            showMenuWarningBadge: state.showMenuWarningBadge,
+            isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
+            canShowDataClearanceAction: state.canShowDataClearanceAction,
+            canShowNavigationHint: state.canShowNavigationHint
+        )
     }
 
     private static func addressToolbarPositionFromSearchBarPosition(_ position: SearchBarPosition)
@@ -346,5 +391,22 @@ struct ToolbarState: ScreenState, Equatable {
         case .top: return .top
         case .bottom: return .bottom
         }
+    }
+
+    static func defaultState(from state: ToolbarState) -> ToolbarState {
+        return ToolbarState(windowUUID: state.windowUUID,
+                            toolbarPosition: state.toolbarPosition,
+                            isPrivateMode: state.isPrivateMode,
+                            addressToolbar: state.addressToolbar,
+                            navigationToolbar: state.navigationToolbar,
+                            isShowingNavigationToolbar: state.isShowingNavigationToolbar,
+                            isShowingTopTabs: state.isShowingTopTabs,
+                            canGoBack: state.canGoBack,
+                            canGoForward: state.canGoForward,
+                            numberOfTabs: state.numberOfTabs,
+                            showMenuWarningBadge: state.showMenuWarningBadge,
+                            isNewTabFeatureEnabled: state.isNewTabFeatureEnabled,
+                            canShowDataClearanceAction: state.canShowDataClearanceAction,
+                            canShowNavigationHint: state.canShowNavigationHint)
     }
 }

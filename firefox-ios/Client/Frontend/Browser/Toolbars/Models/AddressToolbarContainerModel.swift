@@ -12,10 +12,11 @@ class AddressToolbarContainerModel: Equatable {
     let browserActions: [ToolbarElement]
 
     let borderPosition: AddressToolbarBorderPosition?
-    let searchEngineName: String?
-    let searchEngineImage: UIImage?
+    let searchEngineName: String
+    let searchEngineImage: UIImage
     let searchEnginesManager: SearchEnginesManager
     let lockIconImageName: String?
+    let lockIconNeedsTheming: Bool
     let safeListedURLImageName: String?
     let url: URL?
     let searchTerm: String?
@@ -41,7 +42,7 @@ class AddressToolbarContainerModel: Equatable {
             searchEngineImageViewA11yId: AccessibilityIdentifiers.Browser.AddressToolbar.searchEngine,
             searchEngineImageViewA11yLabel: String(
                 format: .AddressToolbar.SearchEngineA11yLabel,
-                searchEngineName ?? ""
+                searchEngineName
             ),
             lockIconButtonA11yId: AccessibilityIdentifiers.Browser.AddressToolbar.lockIcon,
             lockIconButtonA11yLabel: .AddressToolbar.PrivacyAndSecuritySettingsA11yLabel,
@@ -49,6 +50,7 @@ class AddressToolbarContainerModel: Equatable {
             urlTextFieldA11yId: AccessibilityIdentifiers.Browser.AddressToolbar.searchTextField,
             searchEngineImage: searchEngineImage,
             lockIconImageName: lockIconImageName,
+            lockIconNeedsTheming: lockIconNeedsTheming,
             safeListedURLImageName: safeListedURLImageName,
             url: url,
             droppableUrl: droppableUrl,
@@ -91,11 +93,17 @@ class AddressToolbarContainerModel: Equatable {
         self.browserActions = AddressToolbarContainerModel.mapActions(state.addressToolbar.browserActions,
                                                                       isShowingTopTabs: state.isShowingTopTabs,
                                                                       windowUUID: windowUUID)
+
+        // If the user has selected an alternative search engine, use that. Otherwise, use the default engine.
+        let searchEngineModel = state.addressToolbar.alternativeSearchEngine
+                                ?? profile.searchEnginesManager.defaultEngine?.generateModel()
+
         self.windowUUID = windowUUID
-        self.searchEngineName = profile.searchEnginesManager.defaultEngine?.shortName
-        self.searchEngineImage = profile.searchEnginesManager.defaultEngine?.image
+        self.searchEngineName = searchEngineModel?.name ?? ""
+        self.searchEngineImage = searchEngineModel?.image ?? UIImage()
         self.searchEnginesManager = profile.searchEnginesManager
         self.lockIconImageName = state.addressToolbar.lockIconImageName
+        self.lockIconNeedsTheming = state.addressToolbar.lockIconNeedsTheming
         self.safeListedURLImageName = state.addressToolbar.safeListedURLImageName
         self.url = state.addressToolbar.url
         self.searchTerm = state.addressToolbar.searchTerm

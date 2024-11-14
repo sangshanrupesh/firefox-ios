@@ -191,6 +191,9 @@ public struct PrefsKeys {
     public static let splashScreenShownKey = "splashScreenShownKey"
 
     public static let PasswordGeneratorShown = "PasswordGeneratorShown"
+
+    // Represents whether or not the user has seen the photon main menu once, at least.
+    public static let PhotonMainMenuShown = "PhotonMainMenuShown"
 }
 
 public protocol Prefs {
@@ -329,7 +332,7 @@ open class MockProfilePrefs: Prefs {
     }
 
     open func clearAll() {
-        let dictionary = things as! [String: Any]
+        guard let dictionary = things as? [String: Any] else { return }
         let keysToDelete: [String] = dictionary.keys.filter { $0.hasPrefix(self.prefix) }
         things.removeObjects(forKeys: keysToDelete)
     }

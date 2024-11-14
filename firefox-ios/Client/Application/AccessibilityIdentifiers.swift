@@ -80,6 +80,7 @@ public struct AccessibilityIdentifiers {
 
         struct NavigationHeaderView {
             static let backButton = "MainMenu.BackButton"
+            static let title = "MainMenu.Title"
             static let closeButton = "MainMenu.CloseMenuButton"
         }
 
@@ -109,6 +110,13 @@ public struct AccessibilityIdentifiers {
         static let readerView = "MainMenu.ReaderViewOn"
         static let nightMode = "MainMenu.NightModeOn"
         static let zoom = "MainMenu.Zoom"
+    }
+
+    struct UnifiedSearch {
+        struct BottomSheetRow {
+            static let engine = "UnifiedSearch.BottomSheetRow.Engine"
+            static let searchSettings = "UnifiedSearch.BottomSheetRow.SearchSettings"
+        }
     }
 
     struct EnhancedTrackingProtection {
@@ -628,6 +636,11 @@ public struct AccessibilityIdentifiers {
 
         struct Address {
             static let title = "AutofillAddress"
+
+            struct Addresses {
+                static let title = "Addresses"
+                static let addAddress = "Add address"
+            }
         }
 
         struct ConnectSetting {

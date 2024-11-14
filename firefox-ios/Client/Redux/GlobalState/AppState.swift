@@ -10,7 +10,7 @@ struct AppState: StateType {
     let activeScreens: ActiveScreensState
 
     static let reducer: Reducer<Self> = { state, action in
-        AppState(activeScreens: ActiveScreensState.reducer(state.activeScreens, action))
+        return AppState(activeScreens: ActiveScreensState.reducer(state.activeScreens, action))
     }
 
     func screenState<S: ScreenState>(_ s: S.Type,
@@ -33,6 +33,7 @@ struct AppState: StateType {
                 case (.searchEngineSelection(let state), .searchEngineSelection): return state as? S
                 case (.trackingProtection(let state), .trackingProtection): return state as? S
                 case (.passwordGenerator(let state), .passwordGenerator): return state as? S
+                case (.nativeErrorPage(let state), .nativeErrorPage): return state as? S
                 default: return nil
                 }
             }.first(where: {
@@ -46,6 +47,10 @@ struct AppState: StateType {
 
                 return $0.windowUUID == expectedUUID
             })
+    }
+
+    static func defaultState(from state: AppState) -> AppState {
+        return AppState(activeScreens: state.activeScreens)
     }
 }
 
@@ -68,18 +73,19 @@ let middlewares = [
     TopSitesMiddleware().topSitesProvider,
     TrackingProtectionMiddleware().trackingProtectionProvider,
     PasswordGeneratorMiddleware().passwordGeneratorProvider,
-    PocketMiddleware().pocketSectionProvider
+    PocketMiddleware().pocketSectionProvider,
+    NativeErrorPageMiddleware().nativeErrorPageProvider
 ]
 
 // In order for us to mock and test the middlewares easier,
 // we change the store to be instantiated as a variable.
 // For non testing builds, we leave the store as a constant.
 #if TESTING
-var store = Store(state: AppState(),
-                  reducer: AppState.reducer,
-                  middlewares: middlewares)
+var store: any DefaultDispatchStore<AppState> = Store(state: AppState(),
+                                                      reducer: AppState.reducer,
+                                                      middlewares: middlewares)
 #else
-let store = Store(state: AppState(),
-                  reducer: AppState.reducer,
-                  middlewares: middlewares)
+let store: any DefaultDispatchStore<AppState> = Store(state: AppState(),
+                                                      reducer: AppState.reducer,
+                                                      middlewares: middlewares)
 #endif

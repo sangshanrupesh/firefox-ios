@@ -134,6 +134,11 @@ class BrowserViewController: UIViewController,
     var isToolbarNavigationHintEnabled: Bool {
         return featureFlags.isFeatureEnabled(.toolbarNavigationHint, checking: .buildOnly)
     }
+
+    var isNativeErrorPageEnabled: Bool {
+        return featureFlags.isFeatureEnabled(.nativeErrorPage, checking: .buildOnly)
+    }
+
     private var browserViewControllerState: BrowserViewControllerState?
 
     // Header stack view can contain the top url bar, top reader mode, top ZoomPageBar
@@ -177,10 +182,8 @@ class BrowserViewController: UIViewController,
     var topTabsVisible: Bool {
         return topTabsViewController != nil
     }
-    // Backdrop used for displaying greyed background for private tabs
-    private lazy var webViewContainerBackdrop: UIView = .build { containerBackdrop in
-        containerBackdrop.alpha = 0
-    }
+    // Window helper used for displaying an opaque background for private tabs.
+    private lazy var privacyWindowHelper = PrivacyWindowHelper()
     var keyboardBackdrop: UIView?
 
     lazy var scrollController = TabScrollingController(windowUUID: windowUUID)
@@ -412,7 +415,6 @@ class BrowserViewController: UIViewController,
         } else {
             urlBar.topTabsIsShowing = showTopTabs
             urlBar.setShowToolbar(!showNavToolbar)
-            toolbar.addNewTabButton.isHidden = showNavToolbar
 
             if showNavToolbar {
                 toolbar.isHidden = false
@@ -506,9 +508,8 @@ class BrowserViewController: UIViewController,
               canShowPrivacyView
         else { return }
 
-        view.bringSubviewToFront(webViewContainerBackdrop)
-        webViewContainerBackdrop.alpha = 1
         contentStackView.alpha = 0
+        privacyWindowHelper.showWindow(withThemedColor: currentTheme().colors.layer3)
 
         if isToolbarRefactorEnabled {
             addressToolbarContainer.alpha = 0
@@ -543,8 +544,7 @@ class BrowserViewController: UIViewController,
                 self.presentedViewController?.popoverPresentationController?.containerView?.alpha = 1
                 self.presentedViewController?.view.alpha = 1
             }, completion: { _ in
-                self.webViewContainerBackdrop.alpha = 0
-                self.view.sendSubviewToBack(self.webViewContainerBackdrop)
+                self.privacyWindowHelper.removeWindow()
             })
 
         if let tab = tabManager.selectedTab, !tab.isFindInPageMode {
@@ -859,6 +859,11 @@ class BrowserViewController: UIViewController,
     private func switchToolbarIfNeeded() {
         var updateNeeded = false
 
+        // FXIOS-10210 Temporary to support updating the Unified Search feature flag during runtime
+        if isToolbarRefactorEnabled {
+            addressToolbarContainer.isUnifiedSearchEnabled = isUnifiedSearchEnabled
+        }
+
         if isToolbarRefactorEnabled, addressToolbarContainer.superview == nil {
             // Show toolbar refactor
             updateNeeded = true
@@ -918,7 +923,7 @@ class BrowserViewController: UIViewController,
     }
 
     func addSubviews() {
-        view.addSubviews(webViewContainerBackdrop, contentStackView)
+        view.addSubviews(contentStackView)
 
         contentStackView.addArrangedSubview(contentContainer)
 
@@ -1127,6 +1132,7 @@ class BrowserViewController: UIViewController,
                 handleFakespotFlow(productURL: productURL)
             }
         }, completion: { _ in
+            self.scrollController.traitCollectionDidChange()
             self.scrollController.setMinimumZoom()
         })
         microsurvey?.setNeedsUpdateConstraints()
@@ -1160,13 +1166,6 @@ class BrowserViewController: UIViewController,
                 urlBarHeightConstraint = make.height.equalTo(UIConstants.TopToolbarHeightMax).constraint
             }
         }
-
-        NSLayoutConstraint.activate([
-            webViewContainerBackdrop.topAnchor.constraint(equalTo: view.topAnchor),
-            webViewContainerBackdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            webViewContainerBackdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            webViewContainerBackdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
 
         NSLayoutConstraint.activate([
             contentStackView.topAnchor.constraint(equalTo: header.bottomAnchor),
@@ -1491,10 +1490,6 @@ class BrowserViewController: UIViewController,
 
     // MARK: - Native Error Page
 
-    private func isNativeErrorPage() -> Bool {
-        featureFlags.isFeatureEnabled(.nativeErrorPage, checking: .buildOnly)
-    }
-
     func showEmbeddedNativeErrorPage() {
     // TODO: FXIOS-9641 #21239 Implement Redux for Native Error Pages
         browserDelegate?.showNativeErrorPage(overlayManager: overlayManager)
@@ -1542,7 +1537,7 @@ class BrowserViewController: UIViewController,
 
         if isAboutHomeURL {
             showEmbeddedHomepage(inline: true, isPrivate: tabManager.selectedTab?.isPrivate ?? false)
-        } else if isErrorURL && isNativeErrorPage() {
+        } else if isErrorURL && isNativeErrorPageEnabled {
             showEmbeddedNativeErrorPage()
         } else {
             showEmbeddedWebview()
@@ -1949,16 +1944,6 @@ class BrowserViewController: UIViewController,
         }
     }
 
-    func lockIconImageName(for tab: Tab?) -> String? {
-        guard let tab, let hasSecureContent = tab.webView?.hasOnlySecureContent else { return nil }
-
-        let lockIconImageName = hasSecureContent ?
-        StandardImageIdentifiers.Large.lockFill :
-        StandardImageIdentifiers.Large.lockSlashFill
-
-        return tab.url?.isReaderModeURL == false ? lockIconImageName : nil
-    }
-
     func updateReaderModeState(for tab: Tab?, readerModeState: ReaderModeState) {
         if isToolbarRefactorEnabled {
             let action = ToolbarAction(
@@ -1981,13 +1966,27 @@ class BrowserViewController: UIViewController,
                 StandardImageIdentifiers.Small.notificationDotFill : nil
             }
 
+            var lockIconImageName: String?
+            var lockIconNeedsTheming = true
+
+            if let hasSecureContent = tab.webView?.hasOnlySecureContent {
+                lockIconImageName = hasSecureContent ?
+                StandardImageIdentifiers.Large.lockFill :
+                StandardImageIdentifiers.Large.lockSlashFill
+
+                let isWebsiteMode = tab.url?.isReaderModeURL == false
+                lockIconImageName = isWebsiteMode ? lockIconImageName : nil
+                lockIconNeedsTheming = isWebsiteMode ? hasSecureContent : true
+            }
+
             let action = ToolbarAction(
                 url: tab.url?.displayURL,
                 isPrivate: tab.isPrivate,
                 isShowingNavigationToolbar: ToolbarHelper().shouldShowNavigationToolbar(for: traitCollection),
                 canGoBack: tab.canGoBack,
                 canGoForward: tab.canGoForward,
-                lockIconImageName: lockIconImageName(for: tab),
+                lockIconImageName: lockIconImageName,
+                lockIconNeedsTheming: lockIconNeedsTheming,
                 safeListedURLImageName: safeListedURLImageName,
                 windowUUID: windowUUID,
                 actionType: ToolbarActionType.urlDidChange)
@@ -2334,7 +2333,8 @@ class BrowserViewController: UIViewController,
         menuHelper.navigationHandler = navigationHandler
 
         updateZoomPageBarVisibility(visible: false)
-        menuHelper.getToolbarActions(navigationController: navigationController) { actions in
+        menuHelper.getToolbarActions(navigationController: navigationController) { [weak self] actions in
+            guard let self else { return }
             let shouldInverse = PhotonActionSheetViewModel.hasInvertedMainMenu(
                 trait: self.traitCollection,
                 isBottomSearchBar: self.isBottomSearchBar
@@ -2345,6 +2345,9 @@ class BrowserViewController: UIViewController,
                 isMainMenu: true,
                 isMainMenuInverted: shouldInverse
             )
+            if self.profile.prefs.boolForKey(PrefsKeys.PhotonMainMenuShown) == nil {
+                self.profile.prefs.setBool(true, forKey: PrefsKeys.PhotonMainMenuShown)
+            }
             self.presentSheetWith(viewModel: viewModel, on: self, from: button)
         }
     }
@@ -3055,7 +3058,6 @@ class BrowserViewController: UIViewController,
         statusBarOverlay.hasTopTabs = ToolbarHelper().shouldShowTopTabs(for: traitCollection)
         statusBarOverlay.applyTheme(theme: currentTheme)
         keyboardBackdrop?.backgroundColor = currentTheme.colors.layer1
-        webViewContainerBackdrop.backgroundColor = currentTheme.colors.layer3
         setNeedsStatusBarAppearanceUpdate()
 
         tabManager.selectedTab?.applyTheme(theme: currentTheme)
@@ -3857,7 +3859,10 @@ extension BrowserViewController: TabManagerDelegate {
             }
         }
 
-        if let readerMode = selectedTab.getContentScript(name: ReaderMode.name()) as? ReaderMode {
+        // When the newly selected tab is the homepage or another internal tab,
+        // we need to explicitely set the reader mode state to be unavailable.
+        if let url = selectedTab.webView?.url, InternalURL.scheme != url.scheme,
+           let readerMode = selectedTab.getContentScript(name: ReaderMode.name()) as? ReaderMode {
             updateReaderModeState(for: selectedTab, readerModeState: readerMode.state)
             if readerMode.state == .active {
                 showReaderModeBar(animated: false)
